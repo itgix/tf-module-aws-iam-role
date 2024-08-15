@@ -1,5 +1,5 @@
 data "aws_iam_policy_document" "assume_role" {
-  count = module.this.enabled ? length(keys(var.principals)) : 0
+  count = var.enabled ? length(keys(var.principals)) : 0
 
   statement {
     effect  = "Allow"
@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 data "aws_iam_policy_document" "assume_role_aggregated" {
-  count                     = module.this.enabled ? 1 : 0
+  count                     = var.enabled ? 1 : 0
   override_policy_documents = data.aws_iam_policy_document.assume_role[*].json
 }
 
@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "assume_role_aggregated" {
 # }
 
 resource "aws_iam_role" "default" {
-  count = module.this.enabled ? 1 : 0
+  count = var.enabled ? 1 : 0
   # name                 = var.use_fullname ? module.role_name.id : module.this.name
   name                 = var.role_name
   assume_role_policy   = join("", data.aws_iam_policy_document.assume_role_aggregated[*].json)
@@ -42,37 +42,37 @@ resource "aws_iam_role" "default" {
   max_session_duration = var.max_session_duration
   permissions_boundary = var.permissions_boundary
   path                 = var.path
-  tags                 = var.tags_enabled ? module.this.tags : null
+  tags                 = var.tags
 }
 
 data "aws_iam_policy_document" "default" {
-  count                     = module.this.enabled && var.policy_document_count > 0 ? 1 : 0
+  count                     = var.enabled && var.policy_document_count > 0 ? 1 : 0
   override_policy_documents = var.policy_documents
 }
 
 resource "aws_iam_policy" "default" {
-  count       = module.this.enabled && var.policy_document_count > 0 ? 1 : 0
+  count       = var.enabled && var.policy_document_count > 0 ? 1 : 0
   name        = var.policy_name != "" && var.policy_name != null ? var.policy_name : module.this.id
   description = var.policy_description
   policy      = join("", data.aws_iam_policy_document.default.*.json)
   path        = var.path
-  tags        = var.tags_enabled ? module.this.tags : null
+  tags        = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "default" {
-  count      = module.this.enabled && var.policy_document_count > 0 ? 1 : 0
+  count      = var.enabled && var.policy_document_count > 0 ? 1 : 0
   role       = join("", aws_iam_role.default.*.name)
   policy_arn = join("", aws_iam_policy.default.*.arn)
 }
 
 resource "aws_iam_role_policy_attachment" "managed" {
-  for_each   = module.this.enabled ? var.managed_policy_arns : []
+  for_each   = var.enabled ? var.managed_policy_arns : []
   role       = join("", aws_iam_role.default.*.name)
   policy_arn = each.key
 }
 
 resource "aws_iam_instance_profile" "default" {
-  count = module.this.enabled && var.instance_profile_enabled ? 1 : 0
+  count = var.enabled && var.instance_profile_enabled ? 1 : 0
   name  = module.this.id
   role  = join("", aws_iam_role.default.*.name)
 }

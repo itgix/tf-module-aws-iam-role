@@ -1,3 +1,7 @@
+variable "enabled" {
+  type = bool
+}
+
 # variable "use_fullname" {
 #   type        = bool
 #   default     = true
@@ -93,8 +97,15 @@ variable "path" {
   default     = "/"
 }
 
-variable "tags_enabled" {
-  type        = string
-  description = "Enable/disable tags on IAM roles and policies"
-  default     = true
+# variable "tags_enabled" {
+#   type        = string
+#   description = "Enable/disable tags on IAM roles and policies"
+#   default     = true
+# }
+
+variable "tags" {
+  type = map(string)
+  default = {
+    ManagedBy = "Terraform"
+  }
 }
