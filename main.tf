@@ -9,10 +9,9 @@ resource "aws_iam_role" "default" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        # Account from where this role will be assumed
+        Action    = "sts:AssumeRole"
+        Effect    = "Allow"
+        Sid       = ""
         Principal = var.principals
       },
     ]
