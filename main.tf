@@ -14,8 +14,6 @@ resource "aws_iam_role" "default" {
         Sid    = ""
         Principal = {
           # Account from where this role will be assumed
-          # at the moment this is the management account
-          # TODO: can we take this dynamically or figure out how to pass account IDs to all the places that need them
           AWS = "arn:aws:iam::${var.account_id}:root"
         }
       },
