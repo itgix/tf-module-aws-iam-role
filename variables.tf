@@ -1,11 +1,15 @@
-variable "use_fullname" {
-  type        = bool
-  default     = true
-  description = <<-EOT
-  If set to 'true' then the full ID for the IAM role name (e.g. `[var.namespace]-[var.environment]-[var.stage]`) will be used.
+# variable "use_fullname" {
+#   type        = bool
+#   default     = true
+#   description = <<-EOT
+#   If set to 'true' then the full ID for the IAM role name (e.g. `[var.namespace]-[var.environment]-[var.stage]`) will be used.
 
-  Otherwise, `var.name` will be used for the IAM role name.
-  EOT
+#   Otherwise, `var.name` will be used for the IAM role name.
+#   EOT
+# }
+
+variable "role_name" {
+  type = string
 }
 
 variable "principals" {
