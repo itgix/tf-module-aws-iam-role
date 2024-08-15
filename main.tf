@@ -1,7 +1,7 @@
 # IAM Role that can be assumed by Terraform for cross account accesss 
 resource "aws_iam_role" "default" {
-  #   name = "itgix-landing-zones"
-  name = var.role_name
+  count = var.enabled ? 1 : 0
+  name  = var.role_name
 
   # Terraform's "jsonencode" function converts a
   # Terraform expression result to valid JSON syntax.
@@ -30,7 +30,7 @@ resource "aws_iam_role" "default" {
 }
 
 resource "aws_iam_policy" "default" {
-  for_each = var.iam_policies
+  for_each = var.enabled ? var.iam_policies : {}
 
   name   = each.value.name
   policy = each.value.policy

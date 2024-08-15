@@ -1,3 +1,9 @@
+variable "enabled" {
+  type        = bool
+  default     = false
+  description = "Enable or Disable the module."
+}
+
 variable "role_name" {
   type        = string
   description = "Name of the role"
