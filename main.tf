@@ -1,78 +1,37 @@
-data "aws_iam_policy_document" "assume_role" {
-  count = var.enabled ? length(keys(var.principals)) : 0
+# IAM Role that can be assumed by Terraform for cross account accesss 
+resource "aws_iam_role" "default" {
+  #   name = "itgix-landing-zones"
+  name = var.role_name
 
-  statement {
-    effect  = "Allow"
-    actions = var.assume_role_actions
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          # Account from where this role will be assumed
+          # at the moment this is the management account
+          # TODO: can we take this dynamically or figure out how to pass account IDs to all the places that need them
+          AWS = "arn:aws:iam::${var.account_id}:root"
+        }
+      },
+    ]
+  })
 
-    principals {
-      type        = element(keys(var.principals), count.index)
-      identifiers = var.principals[element(keys(var.principals), count.index)]
-    }
+  managed_policy_arns = { for k, v in aws_iam_policy.default : k => v.arn }
 
-    dynamic "condition" {
-      for_each = var.assume_role_conditions
-      content {
-        test     = condition.value.test
-        variable = condition.value.variable
-        values   = condition.value.values
-      }
-    }
+  tags = {
+    ManagedBy = "Terraform"
   }
 }
 
-data "aws_iam_policy_document" "assume_role_aggregated" {
-  count                     = var.enabled ? 1 : 0
-  override_policy_documents = data.aws_iam_policy_document.assume_role[*].json
-}
-
-# module "role_name" {
-#   source          = "cloudposse/label/null"
-#   version         = "0.25.0"
-#   id_length_limit = 64
-#   context         = module.this.context
-# }
-
-resource "aws_iam_role" "default" {
-  count = var.enabled ? 1 : 0
-  # name                 = var.use_fullname ? module.role_name.id : module.this.name
-  name                 = var.role_name
-  assume_role_policy   = join("", data.aws_iam_policy_document.assume_role_aggregated[*].json)
-  description          = var.role_description
-  max_session_duration = var.max_session_duration
-  permissions_boundary = var.permissions_boundary
-  path                 = var.path
-  tags                 = var.tags
-}
-
-data "aws_iam_policy_document" "default" {
-  count                     = var.enabled && var.policy_document_count > 0 ? 1 : 0
-  override_policy_documents = var.policy_documents
-}
-
 resource "aws_iam_policy" "default" {
-  count       = var.enabled && var.policy_document_count > 0 ? 1 : 0
-  name        = var.policy_name != "" && var.policy_name != null ? var.policy_name : join("", aws_iam_role.default.*.unique_id)
-  description = var.policy_description
-  policy      = join("", data.aws_iam_policy_document.default.*.json)
-  path        = var.path
-  tags        = var.tags
-}
+  for_each = var.iam_policies
 
-resource "aws_iam_role_policy_attachment" "default" {
-  count      = var.enabled && var.policy_document_count > 0 ? 1 : 0
-  role       = join("", aws_iam_role.default.*.name)
-  policy_arn = join("", aws_iam_policy.default.*.arn)
-}
-
-resource "aws_iam_role_policy_attachment" "managed" {
-  for_each   = var.enabled ? var.managed_policy_arns : []
-  role       = join("", aws_iam_role.default.*.name)
-  policy_arn = each.key
-}
-
-resource "aws_iam_instance_profile" "default" {
-  count = var.enabled && var.instance_profile_enabled ? 1 : 0
-  name  = join("", aws_iam_role.default.*.unique_id)
-  role  = join("", aws_iam_role.default.*.name)
+  name   = each.value.name
+  policy = each.value.policy
 }
