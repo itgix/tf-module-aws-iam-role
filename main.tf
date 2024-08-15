@@ -52,7 +52,7 @@ data "aws_iam_policy_document" "default" {
 
 resource "aws_iam_policy" "default" {
   count       = var.enabled && var.policy_document_count > 0 ? 1 : 0
-  name        = var.policy_name != "" && var.policy_name != null ? var.policy_name : module.this.id
+  name        = var.policy_name != "" && var.policy_name != null ? var.policy_name : join("", aws_iam_role.default.*.unique_id)
   description = var.policy_description
   policy      = join("", data.aws_iam_policy_document.default.*.json)
   path        = var.path
@@ -73,6 +73,6 @@ resource "aws_iam_role_policy_attachment" "managed" {
 
 resource "aws_iam_instance_profile" "default" {
   count = var.enabled && var.instance_profile_enabled ? 1 : 0
-  name  = module.this.id
+  name  = join("", aws_iam_role.default.*.unique_id)
   role  = join("", aws_iam_role.default.*.name)
 }
