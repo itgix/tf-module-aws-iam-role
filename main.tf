@@ -12,10 +12,8 @@ resource "aws_iam_role" "default" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Sid    = ""
-        Principal = {
-          # Account from where this role will be assumed
-          AWS = "arn:aws:iam::${var.account_id}:root"
-        }
+        # Account from where this role will be assumed
+        Principal = var.principals
       },
     ]
   })

@@ -19,3 +19,7 @@ variable "iam_policies" {
     policy = string
   }))
 }
+
+variable "principals" {
+  type = map(any)
+}
