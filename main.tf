@@ -17,8 +17,6 @@ resource "aws_iam_role" "default" {
     ]
   })
 
-  managed_policy_arns = [for policy in aws_iam_policy.default : policy.arn]
-
   tags = {
     ManagedBy = "Terraform"
   }
@@ -29,4 +27,11 @@ resource "aws_iam_policy" "default" {
 
   name   = each.value.name
   policy = each.value.policy
+}
+
+resource "aws_iam_role_policy_attachment" "default" {
+  for_each = { for idx, policy in aws_iam_policy.default : idx => policy }
+
+  role       = aws_iam_role.default[0].name
+  policy_arn = each.value.arn
 }
