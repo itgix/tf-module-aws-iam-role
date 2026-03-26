@@ -1,40 +1,57 @@
 The Terraform module is used by the ITGix AWS Landing Zone - https://itgix.com/itgix-landing-zone/
 
-<!-- BEGIN_TF_DOCS -->
-## Requirements
+# AWS IAM Role Terraform Module
 
-No requirements.
+This module creates an IAM role with custom inline policies and configurable trust relationships.
 
-## Providers
+Part of the [ITGix AWS Landing Zone](https://itgix.com/itgix-landing-zone/).
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
+## Resources Created
 
-## Modules
-
-No modules.
-
-## Resources
-
-| Name | Type |
-|------|------|
-| [aws_iam_policy.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
-| [aws_iam_role.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+- IAM role with assume role policy
+- IAM policies (inline)
+- Policy attachments
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_enabled"></a> [enabled](#input\_enabled) | Enable or Disable the module. | `bool` | `false` | no |
-| <a name="input_iam_policies"></a> [iam\_policies](#input\_iam\_policies) | n/a | <pre>map(object({<br/>    name   = string<br/>    policy = string<br/>  }))</pre> | n/a | yes |
-| <a name="input_principals"></a> [principals](#input\_principals) | n/a | `map(any)` | n/a | yes |
-| <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the role | `string` | n/a | yes |
+|------|-------------|------|---------|----------|
+| `enabled` | Enable or Disable the module | `bool` | `false` | no |
+| `role_name` | Name of the role | `string` | — | yes |
+| `iam_policies` | Map of IAM policies to create and attach | `map(object({name=string, policy=string}))` | — | yes |
+| `principals` | Trust relationship principals | `map(any)` | — | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_iam_policy_arns"></a> [iam\_policy\_arns](#output\_iam\_policy\_arns) | n/a |
-<!-- END_TF_DOCS -->
+| `iam_policy_arns` | Map of created IAM policy ARNs |
+
+## Usage Example
+
+```hcl
+module "iam_role" {
+  source = "path/to/tf-module-aws-iam-role"
+
+  enabled   = true
+  role_name = "my-custom-role"
+
+  principals = {
+    Service = ["lambda.amazonaws.com"]
+  }
+
+  iam_policies = {
+    logs = {
+      name   = "cloudwatch-logs"
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [{
+          Effect   = "Allow"
+          Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+          Resource = "*"
+        }]
+      })
+    }
+  }
+}
+```
